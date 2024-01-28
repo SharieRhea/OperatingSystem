@@ -8,18 +8,13 @@ public class Kernel {
     public Kernel() {
         scheduler = new Scheduler();
         thread = new Thread(this::run);
-        semaphore = new Semaphore(1);
+        semaphore = new Semaphore(0);
 
         thread.start();
     }
 
     public void start() {
         semaphore.release();
-    }
-
-    // maybe? from rubric
-    public void createProcess(UserlandProcess up) {
-        scheduler.createProcess(up);
     }
 
     public void run() {
@@ -30,19 +25,16 @@ public class Kernel {
             catch (InterruptedException interruptedException) {
                 System.out.println("Thread interruption: " + interruptedException.getMessage());
             }
-            // switch on OS.currentCall - for each call the func that implements them
             switch (OS.currentCall) {
-                case CreateProcess -> {
+                case CreateProcess ->
                     OS.returnValue = scheduler.createProcess((UserlandProcess) OS.parameters.get(0));
-                    OS.currentCall = CallType.SwitchProcess;
-                }
-                case SwitchProcess -> {
+                case SwitchProcess ->
                     scheduler.switchProcess();
-                }
             }
-            if (scheduler.currentProcess.isStopped())
-                scheduler.currentProcess.start();
-            else
+            scheduler.currentProcess.start();
+
+            // If this is the first time the process is being started, start the thread
+            if (!scheduler.currentProcess.isStarted())
                 scheduler.currentProcess.run();
         }
     }

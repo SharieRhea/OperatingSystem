@@ -1,14 +1,11 @@
 import java.util.concurrent.Semaphore;
 
 public abstract class UserlandProcess implements Runnable {
-    // todo: see if any of these need a default init
-    protected Thread thread = new Thread(this::main);
-    protected Semaphore semaphore = new Semaphore(1);
-    protected boolean isQuantumValid;
-
-    public void requestStop() {
-        isQuantumValid = false;
-    }
+    private Thread thread = new Thread(this::main);
+    private Semaphore semaphore = new Semaphore(0);
+    private boolean isQuantumInvalid = false;
+    // Used to prevent calling thread.start() more than once
+    private boolean started = false;
 
     public abstract void main();
 
@@ -33,6 +30,10 @@ public abstract class UserlandProcess implements Runnable {
         }
     }
 
+    public void requestStop() {
+        isQuantumInvalid = true;
+    }
+
     public void run() {
         try {
             semaphore.acquire();
@@ -40,13 +41,18 @@ public abstract class UserlandProcess implements Runnable {
         catch (InterruptedException interruptedException) {
             System.out.println("Thread interruption: " + interruptedException.getMessage());
         }
+        started = true;
         thread.start();
     }
 
     public void cooperate() {
-        if (isQuantumValid) {
-            isQuantumValid = false;
+        if (isQuantumInvalid) {
+            isQuantumInvalid = false;
             OS.switchProcess();
         }
+    }
+
+    public boolean isStarted() {
+        return started;
     }
 }

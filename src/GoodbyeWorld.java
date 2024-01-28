@@ -1,5 +1,3 @@
-import java.util.concurrent.Semaphore;
-
 public class GoodbyeWorld extends UserlandProcess {
 
     public void main() {

@@ -18,7 +18,7 @@ public class Scheduler {
             }
         };
         // Schedule an interrupt to occur every 250ms and request the currentProcess to stop
-        timer.scheduleAtFixedRate(interrupt, 250L, 250L);
+        timer.scheduleAtFixedRate(interrupt, 0L, 250L);
     }
 
     public int createProcess(UserlandProcess up) {

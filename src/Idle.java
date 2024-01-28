@@ -1,5 +1,3 @@
-import java.util.concurrent.Semaphore;
-
 public class Idle extends UserlandProcess {
 
     public void main() {
