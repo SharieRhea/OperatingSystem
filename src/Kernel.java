@@ -27,9 +27,9 @@ public class Kernel {
             }
             switch (OS.currentCall) {
                 case CreateProcess ->
-                    OS.returnValue = scheduler.createProcess((UserlandProcess) OS.parameters.get(0));
+                    createProcess();
                 case SwitchProcess ->
-                    scheduler.switchProcess();
+                    switchProcess();
             }
             scheduler.currentProcess.start();
 
@@ -37,6 +37,14 @@ public class Kernel {
             if (!scheduler.currentProcess.isStarted())
                 scheduler.currentProcess.run();
         }
+    }
+
+    private void createProcess() {
+        OS.returnValue = scheduler.createProcess((UserlandProcess) OS.parameters.get(0));
+    }
+
+    private void switchProcess() {
+        scheduler.switchProcess();
     }
 
     public Scheduler getScheduler() {

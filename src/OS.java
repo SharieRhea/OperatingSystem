@@ -19,13 +19,15 @@ public class OS {
         }
         else {
             // Creating the very first process, wait for the Kernel to finish creating it
-            try {
-                Thread.sleep(10);
-            }
-            catch (InterruptedException interruptedException) {
-                System.out.println("Interruption: " + interruptedException.getMessage());
+            while (kernel.getScheduler().currentProcess == null) {
+                try {
+                    Thread.sleep(10);
+                } catch (InterruptedException interruptedException) {
+                    System.out.println("Interruption: " + interruptedException.getMessage());
+                }
             }
         }
+        // This is the pid for the process that was just created
         return (int) returnValue;
     }
 

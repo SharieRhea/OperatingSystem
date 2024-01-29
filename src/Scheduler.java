@@ -23,6 +23,7 @@ public class Scheduler {
 
     public int createProcess(UserlandProcess up) {
         processes.add(up);
+        // Starts the first process
         if (currentProcess == null)
             switchProcess();
         pidCounter++;
