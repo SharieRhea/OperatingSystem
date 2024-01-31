@@ -1,9 +1,10 @@
-import java.util.LinkedList;
+import java.util.ArrayDeque;
+import java.util.Queue;
 import java.util.Timer;
 import java.util.TimerTask;
 
 public class Scheduler {
-    private LinkedList<UserlandProcess> processes = new LinkedList<>();
+    private Queue<UserlandProcess> processes = new ArrayDeque<>();
     private Timer timer;
     public UserlandProcess currentProcess = null;
     private int pidCounter = 0;
@@ -21,8 +22,8 @@ public class Scheduler {
         timer.scheduleAtFixedRate(interrupt, 0L, 250L);
     }
 
-    public int createProcess(UserlandProcess up) {
-        processes.add(up);
+    public int createProcess(UserlandProcess userlandProcess) {
+        processes.add(userlandProcess);
         // Starts the first process
         if (currentProcess == null)
             switchProcess();
@@ -35,8 +36,8 @@ public class Scheduler {
         // exists and hasn't finished yet
         if (currentProcess != null && !currentProcess.isDone()) {
             processes.add(currentProcess);
-            processes.removeFirst();
+            processes.poll();
         }
-        currentProcess = processes.getFirst();
+        currentProcess = processes.peek();
     }
 }
