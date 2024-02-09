@@ -1,11 +1,14 @@
+import java.time.Clock;
+import java.time.Instant;
 import java.util.*;
 
 public class Scheduler {
     private final Random random = new Random();
-    public PCB currentPCB = null;
     private final Queue<PCB> realTimeProcesses = new ArrayDeque<>();
     private final Queue<PCB> interactiveProcesses = new ArrayDeque<>();
     private final Queue<PCB> backgroundProcesses = new ArrayDeque<>();
+    private final HashMap<Instant, PCB> sleepingProcesses = new HashMap<>();
+    public PCB currentPCB = null;
 
     public Scheduler() {
         Timer timer = new Timer();
@@ -34,20 +37,26 @@ public class Scheduler {
     }
 
     public void switchProcess() {
+        // First, check to see if any sleeping process are eligible to run now
+        wakeUpEligibleProcesses();
         // Move current process to the end of the list as long as it
         // exists and hasn't finished yet
-        if (currentPCB != null && !currentPCB.isDone()) {
-            switch (currentPCB.getPriority()) {
-                case REAL_TIME -> realTimeProcesses.add(currentPCB);
-                case INTERACTIVE -> interactiveProcesses.add(currentPCB);
-                case BACKGROUND -> backgroundProcesses.add(currentPCB);
-            }
-        }
+        if (currentPCB != null && !currentPCB.isDone())
+            addToQueue(currentPCB);
+        currentPCB = getQueueToRun().poll();
+    }
+
+    public void sleep(int milliseconds) {
+        // take the current time and add milliseconds to it
+        // put process into map time -> process
+        Instant timeToWake = Clock.systemUTC().instant().plusMillis(milliseconds);
+        sleepingProcesses.put(timeToWake, currentPCB);
+        // DON'T call switchProcess because this process should not be added to a queue until
+        // ready to wake, just run a new process
         currentPCB = getQueueToRun().poll();
     }
 
     private Queue<PCB> getQueueToRun() {
-        // todo: have to account for queues being empty here somewhere
         int number = random.nextInt(100);
         // Use 6/3/1 scheme
         if (!realTimeProcesses.isEmpty()) {
@@ -66,5 +75,24 @@ public class Scheduler {
                 return interactiveProcesses;
         }
         return backgroundProcesses;
+    }
+
+    private void wakeUpEligibleProcesses() {
+        Instant now = Clock.systemUTC().instant();
+        // Filter keySet to only Instants which are before the current time, in other words,
+        // these are the processes which can be woken up
+        var eligible = sleepingProcesses.keySet().stream().filter(now::isAfter).toList();
+        for (Instant instant : eligible) {
+            addToQueue(sleepingProcesses.get(instant));
+            sleepingProcesses.remove(instant);
+        }
+    }
+
+    private void addToQueue(PCB pcb) {
+        switch (pcb.getPriority()) {
+            case REAL_TIME -> realTimeProcesses.add(pcb);
+            case INTERACTIVE -> interactiveProcesses.add(pcb);
+            case BACKGROUND -> backgroundProcesses.add(pcb);
+        }
     }
 }

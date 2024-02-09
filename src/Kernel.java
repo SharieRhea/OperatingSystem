@@ -45,7 +45,7 @@ public class Kernel {
     }
 
     private void sleep() {
-        //scheduler.sleep();
+        scheduler.sleep(((int) OS.parameters.get(0)));
     }
 
     public Scheduler getScheduler() {

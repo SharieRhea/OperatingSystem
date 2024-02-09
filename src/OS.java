@@ -50,11 +50,12 @@ public class OS {
         kernel = new Kernel();
 
         createProcess(init);
-        createProcess(new Idle());
+        createProcess(new Idle(), Priority.BACKGROUND);
     }
 
     public static void sleep(int milliseconds) {
         parameters.clear();
+        parameters.add(milliseconds);
         currentCall = CallType.Sleep;
 
         switchToKernel();

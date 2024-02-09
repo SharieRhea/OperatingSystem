@@ -9,6 +9,7 @@ public class HelloWorld extends UserlandProcess {
             catch (InterruptedException interruptedException) {
                 System.out.println("Thread interruption: " + interruptedException.getMessage());
             }
+            OS.sleep(1000);
             cooperate();
         }
     }
