@@ -28,11 +28,13 @@ public class Kernel {
                 case SwitchProcess -> switchProcess();
                 case Sleep -> sleep();
             }
-            scheduler.currentPCB.getUserlandProcess().start();
+            if (scheduler.currentPCB != null) {
+                scheduler.currentPCB.start();
 
-            // If this is the first time the process is being started, start the thread
-            if (!scheduler.currentPCB.getUserlandProcess().isStarted())
-                scheduler.currentPCB.getUserlandProcess().run();
+                // If this is the first time the process is being started, start the thread
+                if (!scheduler.currentPCB.getUserlandProcess().isStarted())
+                    scheduler.currentPCB.getUserlandProcess().run();
+            }
         }
     }
 

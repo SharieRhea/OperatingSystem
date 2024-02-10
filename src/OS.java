@@ -6,10 +6,6 @@ public class OS {
     public static Object returnValue;
     private static Kernel kernel;
 
-    public static int createProcess(UserlandProcess userlandProcess) {
-        return createProcess(userlandProcess, Priority.INTERACTIVE);
-    }
-
     public static int createProcess(UserlandProcess userlandProcess, Priority priority) {
         // Set up shared information between OS and Kernel
         parameters.clear();
@@ -30,6 +26,11 @@ public class OS {
         return (int) returnValue;
     }
 
+    // Overloaded so that the default priority is interactive
+    public static int createProcess(UserlandProcess userlandProcess) {
+        return createProcess(userlandProcess, Priority.INTERACTIVE);
+    }
+
     public static void switchProcess() {
         // Set up shared information between OS and Kernel
         parameters.clear();
@@ -38,26 +39,35 @@ public class OS {
         switchToKernel();
     }
 
-    private static void switchToKernel() {
-        kernel.start();
-        PCB currentPCB = kernel.getScheduler().currentPCB;
-        if (currentPCB != null) {
-            currentPCB.getUserlandProcess().stop();
-        }
-    }
-
-    public static void startup(UserlandProcess init) {
-        kernel = new Kernel();
-
-        createProcess(init);
-        createProcess(new Idle(), Priority.BACKGROUND);
-    }
-
     public static void sleep(int milliseconds) {
         parameters.clear();
         parameters.add(milliseconds);
         currentCall = CallType.Sleep;
 
         switchToKernel();
+    }
+
+    private static void switchToKernel() {
+        kernel.start();
+        PCB currentPCB = kernel.getScheduler().currentPCB;
+        if (currentPCB != null)
+            currentPCB.stop();
+    }
+
+    public static void startup(UserlandProcess init, Priority priority) {
+        kernel = new Kernel();
+
+        createProcess(new Idle(), Priority.BACKGROUND);
+        createProcess(init, priority);
+    }
+
+    // Overloaded so that the default priority is interactive
+    public static void startup(UserlandProcess init) {
+        startup(init, Priority.INTERACTIVE);
+    }
+
+    // Used for testing only.
+    public static Kernel getKernel() {
+        return kernel;
     }
 }

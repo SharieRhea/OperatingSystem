@@ -15,8 +15,10 @@ public class Scheduler {
         TimerTask interrupt = new TimerTask() {
             @Override
             public void run() {
-                if (currentPCB != null && currentPCB.getUserlandProcess() != null)
+                if (currentPCB != null && currentPCB.getUserlandProcess() != null) {
                     currentPCB.getUserlandProcess().requestStop();
+                    currentPCB.incrementTimeoutCounter();
+                }
             }
         };
         // Schedule an interrupt to occur every 250ms and request the currentProcess to stop
@@ -39,18 +41,22 @@ public class Scheduler {
     public void switchProcess() {
         // First, check to see if any sleeping process are eligible to run now
         wakeUpEligibleProcesses();
-        // Move current process to the end of the list as long as it
-        // exists and hasn't finished yet
-        if (currentPCB != null && !currentPCB.isDone())
+
+        if (currentPCB != null && !currentPCB.isDone()) {
+            // Check if this process should be demoted
+            if (currentPCB.getTimeoutCounter() > 4)
+                currentPCB.demoteProcess();
             addToQueue(currentPCB);
+        }
+        // Grab the next process
         currentPCB = getQueueToRun().poll();
     }
 
     public void sleep(int milliseconds) {
-        // take the current time and add milliseconds to it
-        // put process into map time -> process
+        // Determine the time to wake
         Instant timeToWake = Clock.systemUTC().instant().plusMillis(milliseconds);
         sleepingProcesses.put(timeToWake, currentPCB);
+        currentPCB.resetTimeoutCounter();
         // DON'T call switchProcess because this process should not be added to a queue until
         // ready to wake, just run a new process
         currentPCB = getQueueToRun().poll();
@@ -74,6 +80,7 @@ public class Scheduler {
             else
                 return interactiveProcesses;
         }
+        // There are only background processes left
         return backgroundProcesses;
     }
 
@@ -89,10 +96,31 @@ public class Scheduler {
     }
 
     private void addToQueue(PCB pcb) {
+        // return a process to its appropriate queue
         switch (pcb.getPriority()) {
             case REAL_TIME -> realTimeProcesses.add(pcb);
             case INTERACTIVE -> interactiveProcesses.add(pcb);
             case BACKGROUND -> backgroundProcesses.add(pcb);
         }
+    }
+
+    // Used for testing only
+    public Queue<PCB> getRealTimeProcesses() {
+        return realTimeProcesses;
+    }
+
+    // Used for testing only
+    public Queue<PCB> getInteractiveProcesses() {
+        return interactiveProcesses;
+    }
+
+    // Used for testing only
+    public Queue<PCB> getBackgroundProcesses() {
+        return backgroundProcesses;
+    }
+
+    // Used for testing only
+    public HashMap<Instant, PCB> getSleepingProcesses() {
+        return sleepingProcesses;
     }
 }
