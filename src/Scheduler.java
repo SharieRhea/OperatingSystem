@@ -55,6 +55,9 @@ public class Scheduler {
     public void sleep(int milliseconds) {
         // Determine the time to wake
         Instant timeToWake = Clock.systemUTC().instant().plusMillis(milliseconds);
+        // Check for key collisions, if key already exists, add 1 millisecond and check again
+        while (sleepingProcesses.containsKey(timeToWake))
+            timeToWake = timeToWake.plusMillis(1);
         sleepingProcesses.put(timeToWake, currentPCB);
         currentPCB.resetTimeoutCounter();
         // DON'T call switchProcess because this process should not be added to a queue until

@@ -78,4 +78,14 @@ public class PrioritySchedulerUnitTests {
                     !OS.getKernel().getScheduler().getSleepingProcesses().isEmpty());
         }
     }
+
+    @Test
+    public void varietyOfProcesses() throws InterruptedException {
+        OS.startup(new Sample1(), Priority.REAL_TIME);
+        OS.createProcess(new Sample2(), Priority.INTERACTIVE);
+        OS.createProcess(new HelloWorld(), Priority.BACKGROUND);
+        Thread.sleep(10000);
+        // Run for 10 seconds, observe that process 2 runs the most then at equal rate to HelloWorld,
+        // process 1 sleeps regularly,
+    }
 }
