@@ -51,10 +51,12 @@ public class PCB {
     }
 
     public void resetTimeoutCounter() {
+        // When a process sleeps or gets demoted, its counter should be reset
         timeoutCounter = 0;
     }
 
     public void demoteProcess() {
+        // Bump priority down one level, a background process cannot be demoted further
         switch (priority) {
             case REAL_TIME -> priority = Priority.INTERACTIVE;
             case INTERACTIVE -> priority = Priority.BACKGROUND;

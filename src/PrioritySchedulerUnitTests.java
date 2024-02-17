@@ -4,6 +4,8 @@ import static org.junit.Assert.*;
 
 public class PrioritySchedulerUnitTests {
 
+    // Please note DEBUG messages in output for an understanding off when processes are being run and demoted.
+
     @Test
     public void eachPriorityNoDemotion() throws InterruptedException {
         OS.startup(new SleepProcess(), Priority.REAL_TIME);
