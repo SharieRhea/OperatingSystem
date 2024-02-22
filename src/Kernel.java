@@ -1,8 +1,9 @@
 import java.util.concurrent.Semaphore;
 
-public class Kernel {
+public class Kernel implements Device {
     private final Scheduler scheduler;
     private final Semaphore semaphore;
+    private final VirtualFileSystem virtualFileSystem = new VirtualFileSystem();
 
     public Kernel() {
         scheduler = new Scheduler();
@@ -52,5 +53,44 @@ public class Kernel {
 
     public Scheduler getScheduler() {
         return scheduler;
+    }
+
+    @Override
+    public int open(String s) {
+        int[] fds = scheduler.currentPCB.getFileDescriptors();
+        int i = 0;
+        while (i < 10 && fds[i] != -1) {
+            i++;
+        }
+
+        if (i == 10)
+            return -1;
+        fds[i] = virtualFileSystem.open("");
+        return i;
+    }
+
+    @Override
+    public void close(int id) {
+        int[] fds = scheduler.currentPCB.getFileDescriptors();
+        int vfsID = fds[id];
+        virtualFileSystem.close(vfsID);
+    }
+
+    @Override
+    public byte[] read(int id, int size) {
+        int[] fds = scheduler.currentPCB.getFileDescriptors();
+        return virtualFileSystem.read(fds[id], size);
+    }
+
+    @Override
+    public int write(int id, byte[] data) {
+        int[] fds = scheduler.currentPCB.getFileDescriptors();
+        return virtualFileSystem.write(fds[id], data);
+    }
+
+    @Override
+    public void seek(int id, int to) {
+        int[] fds = scheduler.currentPCB.getFileDescriptors();
+        virtualFileSystem.seek(fds[id], to);
     }
 }

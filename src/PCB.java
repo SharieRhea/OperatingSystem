@@ -4,6 +4,7 @@ public class PCB {
     private final UserlandProcess userlandProcess;
     private Priority priority;
     private int timeoutCounter = 0;
+    private final int[] fileDescriptors = new int[] {-1, -1, -1, -1, -1, -1, -1, -1, -1, -1};
 
     public PCB(UserlandProcess up, Priority priority) {
         pid = nextPID;
@@ -62,5 +63,9 @@ public class PCB {
             case INTERACTIVE -> priority = Priority.BACKGROUND;
         }
         resetTimeoutCounter();
+    }
+
+    public int[] getFileDescriptors() {
+        return fileDescriptors;
     }
 }

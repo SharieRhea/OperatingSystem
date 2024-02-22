@@ -66,7 +66,6 @@ public class OS {
         startup(init, Priority.INTERACTIVE);
     }
 
-    // Used for testing only.
     public static Kernel getKernel() {
         return kernel;
     }

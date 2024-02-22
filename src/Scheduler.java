@@ -39,15 +39,27 @@ public class Scheduler {
         // First, check to see if any sleeping process are eligible to run now
         wakeUpEligibleProcesses();
 
-        if (currentPCB != null && !currentPCB.isDone()) {
-            // Check if this process should be demoted
-            if (currentPCB.getTimeoutCounter() > 4 && currentPCB.getPriority() != Priority.BACKGROUND) {
-                System.out.println("--DEBUG: Demoting last run process.");
-                currentPCB.demoteProcess();
+        if (currentPCB == null)
+            return;
+
+        if (currentPCB.isDone()) {
+            // Process has ended, need to clean up any devices that were left open
+            Kernel kernel = OS.getKernel();
+            for (int fd : currentPCB.getFileDescriptors()) {
+                if (fd != -1) {
+                    kernel.close(fd);
+                }
             }
-            addToQueue(currentPCB);
+            // Early return so that we don't add this process back onto the queue
+            currentPCB = getQueueToRun().poll();
+            return;
         }
-        // Grab the next process
+
+        // Check if this process should be demoted
+        if (currentPCB.getTimeoutCounter() > 4 && currentPCB.getPriority() != Priority.BACKGROUND)
+            currentPCB.demoteProcess();
+        addToQueue(currentPCB);
+        // Grab the next process to run
         currentPCB = getQueueToRun().poll();
     }
 
@@ -68,32 +80,21 @@ public class Scheduler {
         int number = random.nextInt(100);
         // Use 6/3/1 scheme
         if (!realTimeProcesses.isEmpty()) {
-            if (number < 10 && !backgroundProcesses.isEmpty()) {
-                System.out.printf("--DEBUG: A BACKGROUND process was chosen based on random number: %d.\n", number);
+            if (number < 10 && !backgroundProcesses.isEmpty())
                 return backgroundProcesses;
-            }
-            else if (number < 40 && !interactiveProcesses.isEmpty()) {
-                System.out.printf("--DEBUG: An INTERACTIVE process was chosen based on random number: %d.\n", number);
+            else if (number < 40 && !interactiveProcesses.isEmpty())
                 return interactiveProcesses;
-            }
-            else {
-                System.out.printf("--DEBUG: A REALTIME process was chosen based on random number: %d.\n", number);
+            else
                 return realTimeProcesses;
-            }
         }
         // use 3/1 scheme
         else if (!interactiveProcesses.isEmpty()) {
-            if (number < 25 && !backgroundProcesses.isEmpty()) {
-                System.out.printf("--DEBUG: A BACKGROUND process was chosen based on random number: %d.\n", number);
+            if (number < 25 && !backgroundProcesses.isEmpty())
                 return backgroundProcesses;
-            }
-            else {
-                System.out.printf("--DEBUG: An INTERACTIVE process was chosen based on random number: %d.\n", number);
+            else
                 return interactiveProcesses;
-            }
         }
         // There are only background processes left
-        System.out.println("--DEBUG: A BACKGROUND process was chosen because it is the only process type left to run");
         return backgroundProcesses;
     }
 
