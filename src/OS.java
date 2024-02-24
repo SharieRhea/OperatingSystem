@@ -6,6 +6,18 @@ public class OS {
     public static Object returnValue;
     private static Kernel kernel;
 
+    public static void startup(UserlandProcess init, Priority priority) {
+        kernel = new Kernel();
+
+        createProcess(new Idle(), Priority.BACKGROUND);
+        createProcess(init, priority);
+    }
+
+    // Overloaded so that the default priority is interactive
+    public static void startup(UserlandProcess init) {
+        startup(init, Priority.INTERACTIVE);
+    }
+
     public static int createProcess(UserlandProcess userlandProcess, Priority priority) {
         // Set up shared information between OS and Kernel
         parameters.clear();
@@ -47,23 +59,57 @@ public class OS {
         switchToKernel();
     }
 
+    public static int open(String s) {
+        parameters.clear();
+        parameters.add(s);
+        currentCall = CallType.Open;
+
+        switchToKernel();
+        return (int) returnValue;
+    }
+
+    public static void close(int id) {
+        parameters.clear();
+        parameters.add(id);
+        currentCall = CallType.Close;
+
+        switchToKernel();
+    }
+
+    public static byte[] read(int id, int size) {
+        parameters.clear();
+        parameters.add(id);
+        parameters.add(size);
+        currentCall = CallType.Read;
+
+        switchToKernel();
+        return (byte[]) returnValue;
+    }
+
+    public static int write(int id, byte[] data) {
+        parameters.clear();
+        parameters.add(id);
+        parameters.add(data);
+        currentCall = CallType.Write;
+
+        switchToKernel();
+        return (int) returnValue;
+    }
+
+    public static void seek(int id, int to) {
+        parameters.clear();
+        parameters.add(id);
+        parameters.add(to);
+        currentCall = CallType.Seek;
+
+        switchToKernel();
+    }
+
     private static void switchToKernel() {
         kernel.start();
         PCB currentPCB = kernel.getScheduler().currentPCB;
         if (currentPCB != null)
             currentPCB.stop();
-    }
-
-    public static void startup(UserlandProcess init, Priority priority) {
-        kernel = new Kernel();
-
-        createProcess(new Idle(), Priority.BACKGROUND);
-        createProcess(init, priority);
-    }
-
-    // Overloaded so that the default priority is interactive
-    public static void startup(UserlandProcess init) {
-        startup(init, Priority.INTERACTIVE);
     }
 
     public static Kernel getKernel() {

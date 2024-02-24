@@ -1,3 +1,3 @@
 public enum CallType {
-    CreateProcess, SwitchProcess, Sleep
+    CreateProcess, SwitchProcess, Sleep, Open, Close, Read, Write, Seek
 }

@@ -2,7 +2,7 @@ import org.junit.Test;
 
 import static org.junit.Assert.*;
 
-public class PrioritySchedulerUnitTests {
+public class UnitTestsPriorityScheduler {
 
     // Please note DEBUG messages in output for an understanding off when processes are being run and demoted.
 

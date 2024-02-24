@@ -39,8 +39,10 @@ public class Scheduler {
         // First, check to see if any sleeping process are eligible to run now
         wakeUpEligibleProcesses();
 
-        if (currentPCB == null)
+        if (currentPCB == null) {
+            currentPCB = getQueueToRun().poll();
             return;
+        }
 
         if (currentPCB.isDone()) {
             // Process has ended, need to clean up any devices that were left open

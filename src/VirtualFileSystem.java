@@ -9,7 +9,7 @@ public class VirtualFileSystem implements Device {
     @Override
     public int open(String s) {
         String deviceType = s.substring(0, s.indexOf(' '));
-        String parameter = s.substring(s.indexOf(' '));
+        String parameter = s.substring(s.indexOf(' ') + 1);
 
         int i = 0;
         while (i < 20 && devices[i] != null) {
@@ -34,7 +34,7 @@ public class VirtualFileSystem implements Device {
                 }
             }
         }
-        return 0;
+        return i;
     }
 
     @Override

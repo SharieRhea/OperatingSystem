@@ -9,7 +9,7 @@ public class RandomDevice implements Device {
         if (s == null || s.isEmpty())
             random = new Random();
         else
-            random = new Random(Integer.parseInt(s));
+            random = new Random(Long.parseLong(s));
 
         // find first empty spot, use that one
         int i = 0;

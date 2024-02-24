@@ -28,6 +28,11 @@ public class Kernel implements Device {
                 case CreateProcess -> createProcess();
                 case SwitchProcess -> switchProcess();
                 case Sleep -> sleep();
+                case Open -> open((String) OS.parameters.get(0));
+                case Close -> close((int) OS.parameters.get(0));
+                case Read -> read((int) OS.parameters.get(0), (int) OS.parameters.get(1));
+                case Write -> write((int) OS.parameters.get(0), (byte[]) OS.parameters.get(1));
+                case Seek -> seek((int) OS.parameters.get(0), (int) OS.parameters.get(1));
             }
             if (scheduler.currentPCB != null) {
                 scheduler.currentPCB.start();
@@ -65,7 +70,8 @@ public class Kernel implements Device {
 
         if (i == 10)
             return -1;
-        fds[i] = virtualFileSystem.open("");
+        fds[i] = virtualFileSystem.open(s);
+        OS.returnValue = i;
         return i;
     }
 
@@ -79,13 +85,15 @@ public class Kernel implements Device {
     @Override
     public byte[] read(int id, int size) {
         int[] fds = scheduler.currentPCB.getFileDescriptors();
-        return virtualFileSystem.read(fds[id], size);
+        OS.returnValue = virtualFileSystem.read(fds[id], size);
+        return (byte[]) OS.returnValue;
     }
 
     @Override
     public int write(int id, byte[] data) {
         int[] fds = scheduler.currentPCB.getFileDescriptors();
-        return virtualFileSystem.write(fds[id], data);
+        OS.returnValue = virtualFileSystem.write(fds[id], data);
+        return (int) OS.returnValue;
     }
 
     @Override
