@@ -2,7 +2,7 @@ import java.io.IOException;
 import java.io.RandomAccessFile;
 
 public class FakeFileSystem implements Device {
-    RandomAccessFile[] files = new RandomAccessFile[10];
+    private RandomAccessFile[] files = new RandomAccessFile[10];
 
     @Override
     public int open(String s) throws IOException {

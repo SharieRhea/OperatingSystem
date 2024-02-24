@@ -67,7 +67,7 @@ public class Kernel implements Device {
         while (i < 10 && fds[i] != -1) {
             i++;
         }
-
+        // Full on devices, fail
         if (i == 10)
             return -1;
         fds[i] = virtualFileSystem.open(s);
@@ -80,6 +80,8 @@ public class Kernel implements Device {
         int[] fds = scheduler.currentPCB.getFileDescriptors();
         int vfsID = fds[id];
         virtualFileSystem.close(vfsID);
+        // Device has been closed, remove its id from the process's file descriptors
+        fds[id] = -1;
     }
 
     @Override

@@ -44,12 +44,16 @@ public class Scheduler {
             return;
         }
 
-        if (currentPCB.isDone()) {
+        // Note: using getHasFinished() instead of isDone() because when a process "dies" it locks up the
+        // semaphore unless it somehow signifies it's done before the last OS.switchProcess
+        if (currentPCB.getUserlandProcess().getHasFinished()) {
             // Process has ended, need to clean up any devices that were left open
             Kernel kernel = OS.getKernel();
-            for (int fd : currentPCB.getFileDescriptors()) {
-                if (fd != -1) {
-                    kernel.close(fd);
+            int[] fileDescriptors = currentPCB.getFileDescriptors();
+            for (int i = 0; i < fileDescriptors.length; i++) {
+                if (fileDescriptors[i] != -1) {
+                    kernel.close(i);
+                    fileDescriptors[i] = -1;
                 }
             }
             // Early return so that we don't add this process back onto the queue

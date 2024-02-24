@@ -1,7 +1,7 @@
 import java.util.Random;
 
 public class RandomDevice implements Device {
-    Random[] randoms = new Random[10];
+    private Random[] randoms = new Random[10];
 
     @Override
     public int open(String s) {
@@ -16,6 +16,7 @@ public class RandomDevice implements Device {
         while (i < 10 && randoms[i] != null) {
             i++;
         }
+        // full on devices, fail
         if (i == 10)
             return -1;
         randoms[i] = random;

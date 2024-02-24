@@ -48,6 +48,7 @@ public class UnitTestsDevices {
         OS.startup(new RandomProcess(), Priority.BACKGROUND);
         OS.createProcess(new FileProcess(), Priority.REAL_TIME);
         OS.createProcess(new RandomFileProcess(), Priority.REAL_TIME);
+        OS.createProcess(new ShortFileProcess());
         OS.createProcess(new FileProcessTwo(), Priority.BACKGROUND);
         OS.createProcess(new RandomProcess(), Priority.REAL_TIME);
         Thread.sleep(5000);
@@ -55,9 +56,17 @@ public class UnitTestsDevices {
 
     @Test
     public void finishingProcess() throws InterruptedException {
-        OS.startup(new ShortFileProcess());
-        OS.createProcess(new RandomFileProcess(), Priority.REAL_TIME);
-        Thread.sleep(5000);
-        //assertTrue(Arrays.stream(OS.getKernel().getVirtualFileSystem().devices).allMatch(Objects::isNull));
+        OS.startup(new ShortFileProcess(), Priority.REAL_TIME);
+        Thread.sleep(3000);
+        // After the process finishes, its device should be cleared from VFS
+        assertTrue(Arrays.stream(OS.getKernel().getVirtualFileSystem().getDevices()).allMatch(Objects::isNull));
+    }
+
+    @Test
+    public void finishingProcessThatClosesOwnDevice() throws InterruptedException {
+        OS.startup(new ShortFileCloseProcess(), Priority.REAL_TIME);
+        Thread.sleep(3000);
+        // After the process finishes, its device should be cleared from VFS
+        assertTrue(Arrays.stream(OS.getKernel().getVirtualFileSystem().getDevices()).allMatch(Objects::isNull));
     }
 }

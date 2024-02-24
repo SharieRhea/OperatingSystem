@@ -6,6 +6,7 @@ public abstract class UserlandProcess implements Runnable {
     private boolean isQuantumInvalid = false;
     // Used to prevent calling thread.start() more than once
     private boolean started = false;
+    private boolean hasFinished = false;
 
     public abstract void main();
 
@@ -52,7 +53,17 @@ public abstract class UserlandProcess implements Runnable {
         }
     }
 
+    // A process must declare when it has finished running in order to prevent a lock-up
+    public void finish() {
+        hasFinished = true;
+        OS.switchProcess();
+    }
+
     public boolean isStarted() {
         return started;
+    }
+
+    public boolean getHasFinished() {
+        return hasFinished;
     }
 }

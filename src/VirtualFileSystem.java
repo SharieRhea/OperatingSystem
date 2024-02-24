@@ -1,10 +1,10 @@
 import java.io.IOException;
 
 public class VirtualFileSystem implements Device {
-    Device[] devices = new Device[20];
-    int[] deviceIDs = new int[20];
-    RandomDevice randomDevice = new RandomDevice();
-    FakeFileSystem fileSystem = new FakeFileSystem();
+    private Device[] devices = new Device[20];
+    private int[] deviceIDs = new int[20];
+    private RandomDevice randomDevice = new RandomDevice();
+    private FakeFileSystem fileSystem = new FakeFileSystem();
 
     @Override
     public int open(String s) {
@@ -19,7 +19,7 @@ public class VirtualFileSystem implements Device {
         if (i == 20)
             return -1;
 
-        // Create whichever device was specified using the appropriate device
+        // Create whichever a new entry for what was specified using the appropriate device
         switch (deviceType) {
             case "random" -> {
                 devices[i] = randomDevice;
@@ -59,5 +59,10 @@ public class VirtualFileSystem implements Device {
     @Override
     public void seek(int id, int to) {
         devices[id].seek(deviceIDs[id], to);
+    }
+
+    // Used for testing only
+    public Device[] getDevices() {
+        return devices;
     }
 }
