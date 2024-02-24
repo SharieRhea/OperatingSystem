@@ -101,4 +101,9 @@ public class Kernel implements Device {
         int[] fds = scheduler.currentPCB.getFileDescriptors();
         virtualFileSystem.seek(fds[id], to);
     }
+
+    // Used for testing only
+    public VirtualFileSystem getVirtualFileSystem() {
+        return virtualFileSystem;
+    }
 }

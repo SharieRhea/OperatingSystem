@@ -1,5 +1,10 @@
 import org.junit.Test;
 
+import java.util.Arrays;
+import java.util.Objects;
+
+import static org.junit.Assert.assertTrue;
+
 public class UnitTestsDevices {
 
     @Test
@@ -46,5 +51,13 @@ public class UnitTestsDevices {
         OS.createProcess(new FileProcessTwo(), Priority.BACKGROUND);
         OS.createProcess(new RandomProcess(), Priority.REAL_TIME);
         Thread.sleep(5000);
+    }
+
+    @Test
+    public void finishingProcess() throws InterruptedException {
+        OS.startup(new ShortFileProcess());
+        OS.createProcess(new RandomFileProcess(), Priority.REAL_TIME);
+        Thread.sleep(5000);
+        //assertTrue(Arrays.stream(OS.getKernel().getVirtualFileSystem().devices).allMatch(Objects::isNull));
     }
 }

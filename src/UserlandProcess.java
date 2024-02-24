@@ -55,6 +55,4 @@ public abstract class UserlandProcess implements Runnable {
     public boolean isStarted() {
         return started;
     }
-
-    // todo: add all the device interface methods, open close read write seek
 }

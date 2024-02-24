@@ -19,6 +19,7 @@ public class VirtualFileSystem implements Device {
         if (i == 20)
             return -1;
 
+        // Create whichever device was specified using the appropriate device
         switch (deviceType) {
             case "random" -> {
                 devices[i] = randomDevice;
@@ -40,6 +41,7 @@ public class VirtualFileSystem implements Device {
     @Override
     public void close(int id) {
         devices[id].close(deviceIDs[id]);
+        // reset arrays
         devices[id] = null;
         deviceIDs[id] = 0;
     }
