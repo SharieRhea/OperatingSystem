@@ -1,7 +1,7 @@
 import java.util.Random;
 
 public class RandomDevice implements Device {
-    private Random[] randoms = new Random[10];
+    private final Random[] randoms = new Random[10];
 
     @Override
     public int open(String s) {

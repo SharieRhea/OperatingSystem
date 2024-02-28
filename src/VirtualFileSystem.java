@@ -1,10 +1,10 @@
 import java.io.IOException;
 
 public class VirtualFileSystem implements Device {
-    private Device[] devices = new Device[20];
-    private int[] deviceIDs = new int[20];
-    private RandomDevice randomDevice = new RandomDevice();
-    private FakeFileSystem fileSystem = new FakeFileSystem();
+    private final Device[] devices = new Device[20];
+    private final int[] deviceIDs = new int[20];
+    private final RandomDevice randomDevice = new RandomDevice();
+    private final FakeFileSystem fileSystem = new FakeFileSystem();
 
     @Override
     public int open(String s) {

@@ -2,7 +2,7 @@ import java.io.IOException;
 import java.io.RandomAccessFile;
 
 public class FakeFileSystem implements Device {
-    private RandomAccessFile[] files = new RandomAccessFile[10];
+    private final RandomAccessFile[] files = new RandomAccessFile[10];
 
     @Override
     public int open(String s) throws IOException {
@@ -63,6 +63,7 @@ public class FakeFileSystem implements Device {
 
     @Override
     public void seek(int id, int to) {
+        // Seek is measured from beginning of file, NOT offset from current pointer
         RandomAccessFile file = files[id];
         try {
             file.seek(to);
