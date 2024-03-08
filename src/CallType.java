@@ -1,3 +1,4 @@
 public enum CallType {
-    CreateProcess, SwitchProcess, Sleep, Open, Close, Read, Write, Seek
+    CREATE_PROCESS, SWITCH_PROCESS, SLEEP, OPEN, CLOSE, READ, WRITE, SEEK,
+    CURRENT_PID, PID_BY_NAME, SEND_MESSAGE, WAIT_FOR_MESSAGE
 }

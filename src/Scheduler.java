@@ -8,6 +8,8 @@ public class Scheduler {
     private final Queue<PCB> interactiveProcesses = new ArrayDeque<>();
     private final Queue<PCB> backgroundProcesses = new ArrayDeque<>();
     private final HashMap<Instant, PCB> sleepingProcesses = new HashMap<>();
+    private final HashMap<Integer, PCB> waitingProcesses = new HashMap<>();
+    private final HashMap<Integer, PCB> livingProcesses = new HashMap<>();
     public PCB currentPCB = null;
 
     public Scheduler() {
@@ -29,6 +31,8 @@ public class Scheduler {
         PCB pcb = new PCB(userlandProcess, priority);
         // Place in correct queue
         addToQueue(pcb);
+        // Add to bank of live processes
+        livingProcesses.put(pcb.getPID(), pcb);
         // Starts the first process
         if (currentPCB == null)
             switchProcess();
@@ -46,7 +50,7 @@ public class Scheduler {
 
         // Note: using getHasFinished() instead of isDone() because when a process "dies" it locks up the
         // semaphore unless it somehow signifies it's done before the last OS.switchProcess
-        if (currentPCB.getUserlandProcess().getHasFinished()) {
+        if (currentPCB.getUserlandProcess().getExited()) {
             // Process has ended, need to clean up any devices that were left open
             Kernel kernel = OS.getKernel();
             int[] fileDescriptors = currentPCB.getFileDescriptors();
@@ -56,6 +60,8 @@ public class Scheduler {
                     fileDescriptors[i] = -1;
                 }
             }
+            // Remove from list of live processes
+            livingProcesses.remove(currentPCB.getPID());
             // Early return so that we don't add this process back onto the queue
             currentPCB = getQueueToRun().poll();
             return;
@@ -115,6 +121,27 @@ public class Scheduler {
         }
     }
 
+    public void waitForMessage() {
+        // if there is a message waiting no need to deschedule
+        Optional<KernelMessage> message = currentPCB.getMessage();
+        if (currentPCB.getMessage().isPresent()) {
+            OS.returnValue = message;
+            return;
+        }
+        // No message, need to deschedule
+        waitingProcesses.put(currentPCB.getPID(), currentPCB);
+        // pick a new process to run
+        currentPCB = getQueueToRun().poll();
+    }
+
+    public void removeWaitingProcess(int pid) {
+        // Return the process to its proper queue
+        PCB process = waitingProcesses.get(pid);
+        addToQueue(process);
+        // Process is no longer waiting for a message, remove it
+        waitingProcesses.remove(pid);
+    }
+
     private void addToQueue(PCB pcb) {
         // return a process to its appropriate queue
         switch (pcb.getPriority()) {
@@ -122,6 +149,16 @@ public class Scheduler {
             case INTERACTIVE -> interactiveProcesses.add(pcb);
             case BACKGROUND -> backgroundProcesses.add(pcb);
         }
+    }
+
+    // Provides a list of all PCBs for the kernel to search through by name and
+    // to get a PCB using its PID
+    public HashMap<Integer, PCB> getAllLivingPCBs() {
+        return livingProcesses;
+    }
+
+    public HashMap<Integer, PCB> getWaitingProcesses() {
+        return waitingProcesses;
     }
 
     // Used for testing only

@@ -16,6 +16,6 @@ public class ShortFileCloseProcess extends UserlandProcess {
         byte[] data = OS.read(fd, message.length);
         OS.close(fd);
         System.out.print("Read from file: " + new String(data, StandardCharsets.UTF_8));
-        finish();
+        exit();
     }
 }

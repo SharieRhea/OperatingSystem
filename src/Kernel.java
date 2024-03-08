@@ -1,3 +1,5 @@
+import java.util.HashMap;
+import java.util.Optional;
 import java.util.concurrent.Semaphore;
 
 public class Kernel implements Device {
@@ -25,14 +27,18 @@ public class Kernel implements Device {
                 System.out.println("Thread interruption: " + interruptedException.getMessage());
             }
             switch (OS.currentCall) {
-                case CreateProcess -> createProcess();
-                case SwitchProcess -> switchProcess();
-                case Sleep -> sleep();
-                case Open -> open((String) OS.parameters.get(0));
-                case Close -> close((int) OS.parameters.get(0));
-                case Read -> read((int) OS.parameters.get(0), (int) OS.parameters.get(1));
-                case Write -> write((int) OS.parameters.get(0), (byte[]) OS.parameters.get(1));
-                case Seek -> seek((int) OS.parameters.get(0), (int) OS.parameters.get(1));
+                case CREATE_PROCESS -> createProcess();
+                case SWITCH_PROCESS -> switchProcess();
+                case SLEEP -> sleep();
+                case OPEN -> open((String) OS.parameters.get(0));
+                case CLOSE -> close((int) OS.parameters.get(0));
+                case READ -> read((int) OS.parameters.get(0), (int) OS.parameters.get(1));
+                case WRITE -> write((int) OS.parameters.get(0), (byte[]) OS.parameters.get(1));
+                case SEEK -> seek((int) OS.parameters.get(0), (int) OS.parameters.get(1));
+                case CURRENT_PID -> OS.returnValue = scheduler.currentPCB.getPID();
+                case PID_BY_NAME -> pidByName((String) OS.parameters.get(0));
+                case SEND_MESSAGE -> sendMessage((KernelMessage) OS.parameters.get(0));
+                case WAIT_FOR_MESSAGE -> waitForMessage();
             }
             if (scheduler.currentPCB != null) {
                 scheduler.currentPCB.start();
@@ -102,6 +108,28 @@ public class Kernel implements Device {
     public void seek(int id, int to) {
         int[] fds = scheduler.currentPCB.getFileDescriptors();
         virtualFileSystem.seek(fds[id], to);
+    }
+
+    private void pidByName(String name) {
+        HashMap<Integer, PCB> map = scheduler.getAllLivingPCBs();
+        // Find the first PCB with a matching name, if there is none, return -1
+        Optional<PCB> pcb = map.values().stream().filter(it -> it.getName().equals(name)).findFirst();
+        OS.returnValue = pcb.map(PCB::getPID).orElse(-1);
+    }
+
+    private void sendMessage(KernelMessage message) {
+        KernelMessage receiverCopy = new KernelMessage(message);
+        receiverCopy.setSenderPID(scheduler.currentPCB.getPID());
+        HashMap<Integer, PCB> map = scheduler.getAllLivingPCBs();
+        PCB targetProcess = map.get(receiverCopy.getReceiverPID());
+        targetProcess.addMessage(receiverCopy);
+        // if this process was waiting, return to its runnable queue
+        if (scheduler.getWaitingProcesses().containsKey(targetProcess.getPID()))
+            scheduler.removeWaitingProcess(targetProcess.getPID());
+    }
+
+    private void waitForMessage() {
+        scheduler.waitForMessage();
     }
 
     // Used for testing only

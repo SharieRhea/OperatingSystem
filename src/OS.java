@@ -23,7 +23,7 @@ public class OS {
         parameters.clear();
         parameters.add(userlandProcess);
         parameters.add(priority);
-        currentCall = CallType.CreateProcess;
+        currentCall = CallType.CREATE_PROCESS;
 
         switchToKernel();
         // Creating the very first process, wait for the Kernel to finish creating it
@@ -46,7 +46,7 @@ public class OS {
     public static void switchProcess() {
         // Set up shared information between OS and Kernel
         parameters.clear();
-        currentCall = CallType.SwitchProcess;
+        currentCall = CallType.SWITCH_PROCESS;
 
         switchToKernel();
     }
@@ -54,7 +54,7 @@ public class OS {
     public static void sleep(int milliseconds) {
         parameters.clear();
         parameters.add(milliseconds);
-        currentCall = CallType.Sleep;
+        currentCall = CallType.SLEEP;
 
         switchToKernel();
     }
@@ -62,7 +62,7 @@ public class OS {
     public static int open(String s) {
         parameters.clear();
         parameters.add(s);
-        currentCall = CallType.Open;
+        currentCall = CallType.OPEN;
 
         switchToKernel();
         return (int) returnValue;
@@ -71,7 +71,7 @@ public class OS {
     public static void close(int id) {
         parameters.clear();
         parameters.add(id);
-        currentCall = CallType.Close;
+        currentCall = CallType.CLOSE;
 
         switchToKernel();
     }
@@ -80,7 +80,7 @@ public class OS {
         parameters.clear();
         parameters.add(id);
         parameters.add(size);
-        currentCall = CallType.Read;
+        currentCall = CallType.READ;
 
         switchToKernel();
         return (byte[]) returnValue;
@@ -90,7 +90,7 @@ public class OS {
         parameters.clear();
         parameters.add(id);
         parameters.add(data);
-        currentCall = CallType.Write;
+        currentCall = CallType.WRITE;
 
         switchToKernel();
         return (int) returnValue;
@@ -100,9 +100,38 @@ public class OS {
         parameters.clear();
         parameters.add(id);
         parameters.add(to);
-        currentCall = CallType.Seek;
+        currentCall = CallType.SEEK;
 
         switchToKernel();
+    }
+
+    public static int getCurrentPID() {
+        parameters.clear();
+        currentCall = CallType.CURRENT_PID;
+        switchToKernel();
+        return (int) returnValue;
+    }
+
+    public static int getPIDByName(String name) {
+        parameters.clear();
+        parameters.add(name);
+        currentCall = CallType.PID_BY_NAME;
+        switchToKernel();
+        return (int) returnValue;
+    }
+
+    public static void sendKernelMessage(KernelMessage message) {
+        parameters.clear();
+        parameters.add(message);
+        currentCall = CallType.SEND_MESSAGE;
+        switchToKernel();
+    }
+
+    public static KernelMessage waitForMessage() {
+        parameters.clear();
+        currentCall = CallType.WAIT_FOR_MESSAGE;
+        switchToKernel();
+        return (KernelMessage) returnValue;
     }
 
     private static void switchToKernel() {

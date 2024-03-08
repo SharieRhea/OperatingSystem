@@ -15,6 +15,6 @@ public class ShortFileProcess extends UserlandProcess {
         OS.seek(fd, 0);
         byte[] data = OS.read(fd, message.length);
         System.out.print("Read from file: " + new String(data, StandardCharsets.UTF_8));
-        finish();
+        exit();
     }
 }
