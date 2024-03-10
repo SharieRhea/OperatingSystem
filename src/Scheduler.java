@@ -122,16 +122,14 @@ public class Scheduler {
     }
 
     public void waitForMessage() {
-        // if there is a message waiting no need to deschedule
-        Optional<KernelMessage> message = currentPCB.getMessage();
-        if (currentPCB.getMessage().isPresent()) {
-            OS.returnValue = message;
-            return;
+        if (currentPCB.getMessages().isEmpty()) {
+            // No message, need to deschedule
+            waitingProcesses.put(currentPCB.getPID(), currentPCB);
+            // pick a new process to run
+            currentPCB = getQueueToRun().poll();
         }
-        // No message, need to deschedule
-        waitingProcesses.put(currentPCB.getPID(), currentPCB);
-        // pick a new process to run
-        currentPCB = getQueueToRun().poll();
+        else
+            OS.returnValue = currentPCB.getMessages().poll();
     }
 
     public void removeWaitingProcess(int pid) {

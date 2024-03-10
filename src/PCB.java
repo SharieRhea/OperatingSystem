@@ -1,5 +1,4 @@
-import java.util.LinkedList;
-import java.util.Optional;
+import java.util.ArrayDeque;
 
 public class PCB {
     private static int nextPID = 0;
@@ -11,7 +10,7 @@ public class PCB {
     private int timeoutCounter = 0;
 
     private final int[] fileDescriptors = new int[] {-1, -1, -1, -1, -1, -1, -1, -1, -1, -1};
-    private final LinkedList<KernelMessage> messageQueue = new LinkedList<>();
+    private final ArrayDeque<KernelMessage> messageQueue = new ArrayDeque<>();
 
     public PCB(UserlandProcess up, Priority priority) {
         pid = nextPID;
@@ -73,14 +72,8 @@ public class PCB {
         resetTimeoutCounter();
     }
 
-    public void addMessage(KernelMessage message) {
-        messageQueue.add(message);
-    }
-
-    public Optional<KernelMessage> getMessage() {
-        if (messageQueue.isEmpty())
-            return Optional.empty();
-        return Optional.ofNullable(messageQueue.remove());
+    public ArrayDeque<KernelMessage> getMessages() {
+        return messageQueue;
     }
 
     public String getName() {

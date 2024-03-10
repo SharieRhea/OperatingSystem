@@ -26,4 +26,8 @@ public class KernelMessage {
     public int getReceiverPID() {
         return receiverPID;
     }
+
+    public int getSenderPID() {
+        return senderPID;
+    }
 }
