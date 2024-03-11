@@ -121,13 +121,12 @@ public class Kernel implements Device {
         KernelMessage receiverCopy = new KernelMessage(message);
         receiverCopy.setSenderPID(scheduler.currentPCB.getPID());
         HashMap<Integer, PCB> map = scheduler.getAllLivingPCBs();
-        PCB targetProcess = map.get(receiverCopy.getReceiverPID());
+        PCB targetProcess = map.get(message.getReceiverPID());
         targetProcess.getMessages().add(receiverCopy);
         // if this process was waiting, return to its runnable queue
-        if (scheduler.getWaitingProcesses().containsKey(targetProcess.getPID())) {
-            OS.returnValue = targetProcess.getMessages().poll();
-            scheduler.removeWaitingProcess(targetProcess.getPID());
-        }
+        if (scheduler.getWaitingProcesses().containsKey(message.getReceiverPID()))
+            //scheduler.restoreProcess(message.getReceiverPID());
+            scheduler.removeWaitingProcess(message.getReceiverPID());
     }
 
     private void waitForMessage() {

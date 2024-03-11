@@ -123,21 +123,27 @@ public class Scheduler {
 
     public void waitForMessage() {
         if (currentPCB.getMessages().isEmpty()) {
-            // No message, need to deschedule
+            // No message, need to deschedule and pick a new process to run
             waitingProcesses.put(currentPCB.getPID(), currentPCB);
-            // pick a new process to run
             currentPCB = getQueueToRun().poll();
         }
         else
             OS.returnValue = currentPCB.getMessages().poll();
     }
 
+    // note: this is the method where everything works, but only for 2 communicating processes, no more
     public void removeWaitingProcess(int pid) {
-        // Return the process to its proper queue
         PCB process = waitingProcesses.get(pid);
-        addToQueue(process);
+        OS.returnValue = process.getMessages().poll();
         // Process is no longer waiting for a message, remove it
         waitingProcesses.remove(pid);
+        addToQueue(process);
+    }
+
+    public void restoreProcess(int pid) {
+        PCB process = waitingProcesses.get(pid);
+        waitingProcesses.remove(pid);
+        addToQueue(process);
     }
 
     private void addToQueue(PCB pcb) {

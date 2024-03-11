@@ -30,4 +30,8 @@ public class KernelMessage {
     public int getSenderPID() {
         return senderPID;
     }
+
+    public byte[] getData() {
+        return data;
+    }
 }

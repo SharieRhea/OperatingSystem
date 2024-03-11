@@ -1,3 +1,5 @@
+import java.nio.ByteBuffer;
+
 public class PingProcess extends UserlandProcess {
 
     @Override
@@ -14,10 +16,11 @@ public class PingProcess extends UserlandProcess {
         int increment = 0;
 
         while (true) {
-            KernelMessage message = new KernelMessage(pid, pongPID, 0, new byte[] {0});
+            KernelMessage message = new KernelMessage(pid, pongPID, 0, ByteBuffer.allocate(4).putInt(increment).array());
             OS.sendKernelMessage(message);
             KernelMessage received = OS.waitForMessage();
-            System.out.printf("PING: from %d to %d%n", received.getSenderPID(), received.getReceiverPID());
+            increment = ByteBuffer.wrap(received.getData()).getInt();
+            System.out.printf("PING: from %d to %d | %d%n", received.getSenderPID(), received.getReceiverPID(), increment);
             try {
                 Thread.sleep(250);
             } catch (InterruptedException ignored) {}
