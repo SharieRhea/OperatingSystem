@@ -131,18 +131,8 @@ public class Scheduler {
             OS.returnValue = currentPCB.getMessages().poll();
     }
 
-    // note: this is the method where everything works, but only for 2 communicating processes, no more
-    public void removeWaitingProcess(int pid) {
-        PCB process = waitingProcesses.get(pid);
-        OS.returnValue = process.getMessages().poll();
-        // Process is no longer waiting for a message, remove it
-        waitingProcesses.remove(pid);
-        addToQueue(process);
-    }
-
     public void restoreProcess(int pid) {
         PCB process = waitingProcesses.get(pid);
-        waitingProcesses.remove(pid);
         addToQueue(process);
     }
 

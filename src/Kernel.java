@@ -41,6 +41,14 @@ public class Kernel implements Device {
                 case WAIT_FOR_MESSAGE -> waitForMessage();
             }
             if (scheduler.currentPCB != null) {
+                // If a process is about to run but is also in the waiting queue, it must have received its message
+                // Populate the message for immediate return and remove from waiting queue
+
+                if (scheduler.getWaitingProcesses().containsKey(scheduler.currentPCB.getPID())) {
+                    OS.returnValue = scheduler.currentPCB.getMessages().poll();
+                    scheduler.getWaitingProcesses().remove(scheduler.currentPCB.getPID());
+                }
+
                 scheduler.currentPCB.start();
 
                 // If this is the first time the process is being started, start the thread
@@ -122,11 +130,12 @@ public class Kernel implements Device {
         receiverCopy.setSenderPID(scheduler.currentPCB.getPID());
         HashMap<Integer, PCB> map = scheduler.getAllLivingPCBs();
         PCB targetProcess = map.get(message.getReceiverPID());
+        if (targetProcess == null)
+            return;
         targetProcess.getMessages().add(receiverCopy);
         // if this process was waiting, return to its runnable queue
         if (scheduler.getWaitingProcesses().containsKey(message.getReceiverPID()))
-            //scheduler.restoreProcess(message.getReceiverPID());
-            scheduler.removeWaitingProcess(message.getReceiverPID());
+            scheduler.restoreProcess(message.getReceiverPID());
     }
 
     private void waitForMessage() {

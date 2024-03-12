@@ -12,10 +12,10 @@ public class SenderProcess extends UserlandProcess {
         }
 
         while (true) {
-            KernelMessage message = new KernelMessage(pid, receiverPID, 0, new byte[] {});
+            KernelMessage message = new KernelMessage(pid, receiverPID, 0, null);
             OS.sendKernelMessage(message);
             KernelMessage received = OS.waitForMessage();
-            System.out.printf("Sender: received ack from the receiver (%d)!%n", received.getSenderPID());
+            System.out.printf("Sender: %s%n", received.toString());
             try {
                 Thread.sleep(250);
             } catch (InterruptedException ignored) {}

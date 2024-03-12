@@ -34,4 +34,9 @@ public class KernelMessage {
     public byte[] getData() {
         return data;
     }
+
+    @Override
+    public String toString() {
+        return "From: %d To: %d Type: %d Data: %s".formatted(senderPID, receiverPID, type, data);
+    }
 }

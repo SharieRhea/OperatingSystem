@@ -1,5 +1,3 @@
-import java.nio.ByteBuffer;
-
 public class ReceiverProcess extends UserlandProcess {
 
     @Override
@@ -15,7 +13,7 @@ public class ReceiverProcess extends UserlandProcess {
 
         while (true) {
             KernelMessage received = OS.waitForMessage();
-            System.out.printf("Receiver: received message from sender (%d)!%n", received.getSenderPID());
+            System.out.printf("Receiver: %s%n", received.toString());
             KernelMessage message = new KernelMessage(pid, senderPID, 0, null);
             OS.sendKernelMessage(message);
             try {
