@@ -88,6 +88,23 @@ public class Scheduler {
         currentPCB = getQueueToRun().poll();
     }
 
+    public void waitForMessage() {
+        if (currentPCB.getMessages().isEmpty()) {
+            // No message, need to deschedule and pick a new process to run
+            waitingProcesses.put(currentPCB.getPID(), currentPCB);
+            currentPCB = getQueueToRun().poll();
+        }
+        else
+            OS.returnValue = currentPCB.getMessages().poll();
+    }
+
+    public void restoreProcess(int pid) {
+        // place the process into its proper queue but leave it in the wait queue as well
+        // kernel uses the wait queue to tell if a process has received a message it was waiting for
+        PCB process = waitingProcesses.get(pid);
+        addToQueue(process);
+    }
+
     private Queue<PCB> getQueueToRun() {
         int number = random.nextInt(100);
         // Use 6/3/1 scheme
@@ -119,21 +136,6 @@ public class Scheduler {
             addToQueue(sleepingProcesses.get(instant));
             sleepingProcesses.remove(instant);
         }
-    }
-
-    public void waitForMessage() {
-        if (currentPCB.getMessages().isEmpty()) {
-            // No message, need to deschedule and pick a new process to run
-            waitingProcesses.put(currentPCB.getPID(), currentPCB);
-            currentPCB = getQueueToRun().poll();
-        }
-        else
-            OS.returnValue = currentPCB.getMessages().poll();
-    }
-
-    public void restoreProcess(int pid) {
-        PCB process = waitingProcesses.get(pid);
-        addToQueue(process);
     }
 
     private void addToQueue(PCB pcb) {

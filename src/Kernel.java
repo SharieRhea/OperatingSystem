@@ -43,7 +43,6 @@ public class Kernel implements Device {
             if (scheduler.currentPCB != null) {
                 // If a process is about to run but is also in the waiting queue, it must have received its message
                 // Populate the message for immediate return and remove from waiting queue
-
                 if (scheduler.getWaitingProcesses().containsKey(scheduler.currentPCB.getPID())) {
                     OS.returnValue = scheduler.currentPCB.getMessages().poll();
                     scheduler.getWaitingProcesses().remove(scheduler.currentPCB.getPID());
@@ -68,6 +67,30 @@ public class Kernel implements Device {
 
     private void sleep() {
         scheduler.sleep(((int) OS.parameters.get(0)));
+    }
+
+    private void pidByName(String name) {
+        HashMap<Integer, PCB> map = scheduler.getAllLivingPCBs();
+        // Find the first PCB with a matching name, if there is none, return -1
+        Optional<PCB> pcb = map.values().stream().filter(it -> it.getName().equals(name)).findFirst();
+        OS.returnValue = pcb.map(PCB::getPID).orElse(-1);
+    }
+
+    private void sendMessage(KernelMessage message) {
+        KernelMessage receiverCopy = new KernelMessage(message);
+        receiverCopy.setSenderPID(scheduler.currentPCB.getPID());
+        HashMap<Integer, PCB> map = scheduler.getAllLivingPCBs();
+        PCB targetProcess = map.get(message.getReceiverPID());
+        if (targetProcess == null)
+            return;
+        targetProcess.getMessages().add(receiverCopy);
+        // if this process was waiting, return to its runnable queue
+        if (scheduler.getWaitingProcesses().containsKey(message.getReceiverPID()))
+            scheduler.restoreProcess(message.getReceiverPID());
+    }
+
+    private void waitForMessage() {
+        scheduler.waitForMessage();
     }
 
     public Scheduler getScheduler() {
@@ -116,30 +139,6 @@ public class Kernel implements Device {
     public void seek(int id, int to) {
         int[] fds = scheduler.currentPCB.getFileDescriptors();
         virtualFileSystem.seek(fds[id], to);
-    }
-
-    private void pidByName(String name) {
-        HashMap<Integer, PCB> map = scheduler.getAllLivingPCBs();
-        // Find the first PCB with a matching name, if there is none, return -1
-        Optional<PCB> pcb = map.values().stream().filter(it -> it.getName().equals(name)).findFirst();
-        OS.returnValue = pcb.map(PCB::getPID).orElse(-1);
-    }
-
-    private void sendMessage(KernelMessage message) {
-        KernelMessage receiverCopy = new KernelMessage(message);
-        receiverCopy.setSenderPID(scheduler.currentPCB.getPID());
-        HashMap<Integer, PCB> map = scheduler.getAllLivingPCBs();
-        PCB targetProcess = map.get(message.getReceiverPID());
-        if (targetProcess == null)
-            return;
-        targetProcess.getMessages().add(receiverCopy);
-        // if this process was waiting, return to its runnable queue
-        if (scheduler.getWaitingProcesses().containsKey(message.getReceiverPID()))
-            scheduler.restoreProcess(message.getReceiverPID());
-    }
-
-    private void waitForMessage() {
-        scheduler.waitForMessage();
     }
 
     // Used for testing only

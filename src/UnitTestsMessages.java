@@ -2,6 +2,8 @@ import org.junit.Test;
 
 public class UnitTestsMessages {
 
+    // Note: must run the tests separately
+
     @Test
     public void pingPong() throws InterruptedException {
         OS.startup(new PingProcess());
@@ -29,7 +31,7 @@ public class UnitTestsMessages {
     }
 
     @Test
-    public void pingPongAndSendReceiver() throws InterruptedException {
+    public void pingPongAndSendReceive() throws InterruptedException {
         OS.startup(new SenderProcess());
         OS.createProcess(new ReceiverProcess());
         OS.createProcess(new PingProcess());

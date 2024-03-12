@@ -30,6 +30,7 @@ public class PCB {
         }
     }
 
+    // unused
     public boolean isDone() {
         return userlandProcess.isDone();
     }
