@@ -1,11 +1,13 @@
 import java.util.HashMap;
 import java.util.Optional;
+import java.util.Random;
 import java.util.concurrent.Semaphore;
 
 public class Kernel implements Device {
     private final Scheduler scheduler;
     private final Semaphore semaphore;
     private final VirtualFileSystem virtualFileSystem = new VirtualFileSystem();
+    private boolean[] freeSpace = new boolean[1000];
 
     public Kernel() {
         scheduler = new Scheduler();
@@ -39,8 +41,18 @@ public class Kernel implements Device {
                 case PID_BY_NAME -> pidByName((String) OS.parameters.get(0));
                 case SEND_MESSAGE -> sendMessage((KernelMessage) OS.parameters.get(0));
                 case WAIT_FOR_MESSAGE -> waitForMessage();
+                case GET_MAPPING -> getMapping((int) OS.parameters.get(0));
+                case ALLOCATE -> allocate(((int) OS.parameters.get(0)));
+                case FREE -> free((int) OS.parameters.get(0), (int) OS.parameters.get(1));
             }
             if (scheduler.currentPCB != null) {
+                // Switching to a new process, need to clear the TLB
+                var TLB = scheduler.currentPCB.getUserlandProcess().getTLB();
+                TLB[0][0] = -1;
+                TLB[0][1] = -1;
+                TLB[1][0] = -1;
+                TLB[1][1] = -1;
+
                 // If a process is about to run but is also in the waiting queue, it must have received its message
                 // Populate the message for immediate return and remove from waiting queue
                 if (scheduler.getWaitingProcesses().containsKey(scheduler.currentPCB.getPID())) {
@@ -91,6 +103,71 @@ public class Kernel implements Device {
 
     private void waitForMessage() {
         scheduler.waitForMessage();
+    }
+
+    private void getMapping(int virtualPageNumber) {
+        int physicalPageNumber = scheduler.currentPCB.getPages()[virtualPageNumber];
+        var TLB = scheduler.currentPCB.getUserlandProcess().getTLB();
+        Random random = new Random();
+        int row = random.nextInt(2);
+        TLB[row][0] = virtualPageNumber;
+        TLB[row][1] = physicalPageNumber;
+    }
+
+    private void allocate(int size) {
+        // todo: check ALL of this, better variable names
+        int numPages = size / 1024;
+        var virtualPages = getScheduler().currentPCB.getPages();
+        // find a contiguous space in virtual memory for this process
+        int i = 0;
+        int contiguous = 0;
+        boolean spaceFound = false;
+        while (!spaceFound) {
+            // fail allocation if there is not enough space in virtual memory
+            if (i == 101) {
+                OS.returnValue = -1;
+                return;
+            }
+
+            if (virtualPages[i] == -1)
+                contiguous++;
+            else
+                contiguous = 0;
+            if (contiguous == numPages)
+                spaceFound = true;
+            i++;
+        }
+        int virtualPointer = i - numPages;
+
+        // Find the first free page in physical memory
+        int k = 0;
+        while (freeSpace[k]) {
+            k++;
+        }
+
+        // mark physical pages as in use
+        for (int j = 0; j < numPages; j++) {
+            // Set the virtual -> physical mapping
+            virtualPages[virtualPointer + j] = k;
+            // Get the next free page in physical memory
+            while (freeSpace[k]) {
+                k++;
+            }
+        }
+        // return the virtual address
+        OS.returnValue = virtualPointer;
+    }
+
+    private void free(int pointer, int size) {
+        // first, get the physical page from the virtual pointer
+        int physicalPage = getScheduler().currentPCB.getPages()[pointer];
+        int numPages = size / 1024;
+        // Remove mappings for however many pages need to be freed
+        for (int i = physicalPage; i < numPages; i++) {
+            getScheduler().currentPCB.getPages()[i] = -1;
+            // todo: check this, not sure how to keep track of free space yet
+            freeSpace[i] = false;
+        }
     }
 
     public Scheduler getScheduler() {

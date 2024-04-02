@@ -60,6 +60,8 @@ public class Scheduler {
                     fileDescriptors[i] = -1;
                 }
             }
+            // todo: need to free this process's memory in case it didn't already
+
             // Remove from list of live processes
             livingProcesses.remove(currentPCB.getPID());
             // Early return so that we don't add this process back onto the queue

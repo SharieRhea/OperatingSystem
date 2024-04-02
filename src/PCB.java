@@ -12,6 +12,8 @@ public class PCB {
     private final int[] fileDescriptors = new int[] {-1, -1, -1, -1, -1, -1, -1, -1, -1, -1};
     private final ArrayDeque<KernelMessage> messageQueue = new ArrayDeque<>();
 
+    private int[] pages = new int[100];
+
     public PCB(UserlandProcess up, Priority priority) {
         pid = nextPID;
         name = up.getClass().getSimpleName();
@@ -83,5 +85,9 @@ public class PCB {
 
     public int[] getFileDescriptors() {
         return fileDescriptors;
+    }
+
+    public int[] getPages() {
+        return pages;
     }
 }

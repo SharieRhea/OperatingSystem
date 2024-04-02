@@ -134,6 +134,38 @@ public class OS {
         return (KernelMessage) returnValue;
     }
 
+    public static void getMapping(int virtualPageNumber) {
+        parameters.clear();
+        parameters.add(virtualPageNumber);
+        currentCall = CallType.GET_MAPPING;
+        switchToKernel();
+    }
+
+    public static int allocateMemory(int size) {
+        // Size must be multiple of 1024, if not fail allocation
+        if (size % 1024 != 0)
+            return -1;
+
+        parameters.clear();
+        parameters.add(size);
+        currentCall = CallType.ALLOCATE;
+        switchToKernel();
+        return (int) OS.returnValue;
+    }
+
+    public static boolean freeMemory(int pointer, int size) {
+        // Pointer and size must be multiple of 1024, if not fail free
+        if (size % 1024 != 0 || pointer % 1024 != 0)
+            return false;
+
+        parameters.clear();
+        parameters.add(pointer);
+        parameters.add(size);
+        currentCall = CallType.FREE;
+        switchToKernel();
+        return (boolean) OS.returnValue;
+    }
+
     private static void switchToKernel() {
         kernel.start();
         PCB currentPCB = kernel.getScheduler().currentPCB;
