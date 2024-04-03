@@ -1,4 +1,5 @@
 import java.util.ArrayDeque;
+import java.util.Arrays;
 
 public class PCB {
     private static int nextPID = 0;
@@ -20,6 +21,7 @@ public class PCB {
         nextPID++;
         userlandProcess = up;
         this.priority = priority;
+        Arrays.fill(pages, -1);
     }
 
     public void stop() {

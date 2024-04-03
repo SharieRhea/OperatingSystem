@@ -46,13 +46,6 @@ public class Kernel implements Device {
                 case FREE -> free((int) OS.parameters.get(0), (int) OS.parameters.get(1));
             }
             if (scheduler.currentPCB != null) {
-                // Switching to a new process, need to clear the TLB
-                var TLB = scheduler.currentPCB.getUserlandProcess().getTLB();
-                TLB[0][0] = -1;
-                TLB[0][1] = -1;
-                TLB[1][0] = -1;
-                TLB[1][1] = -1;
-
                 // If a process is about to run but is also in the waiting queue, it must have received its message
                 // Populate the message for immediate return and remove from waiting queue
                 if (scheduler.getWaitingProcesses().containsKey(scheduler.currentPCB.getPID())) {
@@ -107,6 +100,10 @@ public class Kernel implements Device {
 
     private void getMapping(int virtualPageNumber) {
         int physicalPageNumber = scheduler.currentPCB.getPages()[virtualPageNumber];
+        // mapping is not valid, do NOT update TLB
+        if (physicalPageNumber == -1)
+            return;
+
         var TLB = scheduler.currentPCB.getUserlandProcess().getTLB();
         Random random = new Random();
         int row = random.nextInt(2);
@@ -115,43 +112,41 @@ public class Kernel implements Device {
     }
 
     private void allocate(int size) {
-        // todo: check ALL of this, better variable names
         int numPages = size / 1024;
         var virtualPages = getScheduler().currentPCB.getPages();
         // find a contiguous space in virtual memory for this process
-        int i = 0;
+        int virtualMemoryIndex = 0;
         int contiguous = 0;
         boolean spaceFound = false;
         while (!spaceFound) {
             // fail allocation if there is not enough space in virtual memory
-            if (i == 101) {
+            if (virtualMemoryIndex > virtualPages.length - 1) {
                 OS.returnValue = -1;
                 return;
             }
 
-            if (virtualPages[i] == -1)
+            if (virtualPages[virtualMemoryIndex] == -1)
                 contiguous++;
             else
                 contiguous = 0;
             if (contiguous == numPages)
                 spaceFound = true;
-            i++;
+            virtualMemoryIndex++;
         }
-        int virtualPointer = i - numPages;
+        int virtualPointer = virtualMemoryIndex - numPages;
 
         // Find the first free page in physical memory
-        int k = 0;
-        while (freeSpace[k]) {
-            k++;
+        int physicalMemoryIndex = 0;
+        while (freeSpace[physicalMemoryIndex]) {
+            physicalMemoryIndex++;
         }
-
-        // mark physical pages as in use
-        for (int j = 0; j < numPages; j++) {
-            // Set the virtual -> physical mapping
-            virtualPages[virtualPointer + j] = k;
+        for (int i = 0; i < numPages; i++) {
+            // Set the virtual -> physical mapping and update in use
+            virtualPages[virtualPointer + i] = physicalMemoryIndex;
+            freeSpace[physicalMemoryIndex] = true;
             // Get the next free page in physical memory
-            while (freeSpace[k]) {
-                k++;
+            while (physicalMemoryIndex < freeSpace.length && freeSpace[physicalMemoryIndex]) {
+                physicalMemoryIndex++;
             }
         }
         // return the virtual address
@@ -165,9 +160,9 @@ public class Kernel implements Device {
         // Remove mappings for however many pages need to be freed
         for (int i = physicalPage; i < numPages; i++) {
             getScheduler().currentPCB.getPages()[i] = -1;
-            // todo: check this, not sure how to keep track of free space yet
             freeSpace[i] = false;
         }
+        OS.returnValue = true;
     }
 
     public Scheduler getScheduler() {
@@ -216,6 +211,10 @@ public class Kernel implements Device {
     public void seek(int id, int to) {
         int[] fds = scheduler.currentPCB.getFileDescriptors();
         virtualFileSystem.seek(fds[id], to);
+    }
+
+    public boolean[] getFreeSpace() {
+        return freeSpace;
     }
 
     // Used for testing only

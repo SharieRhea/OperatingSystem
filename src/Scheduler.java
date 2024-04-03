@@ -40,13 +40,20 @@ public class Scheduler {
     }
 
     public void switchProcess() {
-        // First, check to see if any sleeping process are eligible to run now
+        // Check to see if any sleeping process are eligible to run now
         wakeUpEligibleProcesses();
 
         if (currentPCB == null) {
             currentPCB = getQueueToRun().poll();
             return;
         }
+
+        // Clear the TLB on a context switch
+        var TLB = currentPCB.getUserlandProcess().getTLB();
+        TLB[0][0] = -1;
+        TLB[0][1] = -1;
+        TLB[1][0] = -1;
+        TLB[1][1] = -1;
 
         // Note: using getHasFinished() instead of isDone() because when a process "dies" it locks up the
         // semaphore unless it somehow signifies it's done before the last OS.switchProcess
@@ -60,7 +67,15 @@ public class Scheduler {
                     fileDescriptors[i] = -1;
                 }
             }
-            // todo: need to free this process's memory in case it didn't already
+            var virtualMemory = currentPCB.getPages();
+            for (int i = 0; i < virtualMemory.length; i++) {
+                if (virtualMemory[i] >= 0) {
+                    // set the physical page to no longer be in use
+                    kernel.getFreeSpace()[virtualMemory[i]] = false;
+                    // clear the mapping from the virtual memory
+                    virtualMemory[i] = -1;
+                }
+            }
 
             // Remove from list of live processes
             livingProcesses.remove(currentPCB.getPID());

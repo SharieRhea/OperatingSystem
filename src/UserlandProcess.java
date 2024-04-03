@@ -25,23 +25,38 @@ public abstract class UserlandProcess implements Runnable {
     }
 
     private int getPhysicalAddress(int address) {
-        // todo: need to kill a process that tries to access memory that it doesn't have
-        // not sure if that should be done here or in kernel somewhere
         int virtualPage = address / 1024;
+        if (virtualPage < 0 || virtualPage > 100) {
+            // trying to access outside memory bounds, kill it
+            System.out.printf("SegmentationFault: Killing PID: %d\n", OS.getCurrentPID());
+            exit();
+            return -1;
+        }
         int offset = address % 1024;
         int physicalPage;
-        if (TLB[0][0] == virtualPage)
+        if (TLB[0][0] == virtualPage) {
             physicalPage = TLB[0][1];
-        else if (TLB[1][0] == virtualPage)
-            physicalPage = TLB[1][1];
-        else {
-            OS.getMapping(virtualPage);
-            if (TLB[0][0] == virtualPage)
-                physicalPage = TLB[0][1];
-            else
-                physicalPage = TLB[1][1];
+            return physicalPage * 1024 + offset;
         }
-        return physicalPage * 1024 + offset;
+        else if (TLB[1][0] == virtualPage) {
+            physicalPage = TLB[1][1];
+            return physicalPage * 1024 + offset;
+        }
+        // wasn't in the TLB, try to get the mapping
+        OS.getMapping(virtualPage);
+        if (TLB[0][0] == virtualPage) {
+            physicalPage = TLB[0][1];
+            return physicalPage * 1024 + offset;
+        }
+        else if (TLB[1][0] == virtualPage) {
+            physicalPage = TLB[1][1];
+            return physicalPage * 1024 + offset;
+        }
+        // a TLB entry was not created for this process, which means this memory
+        // does not belong or has not been allocated, kill the process
+        System.out.printf("SegmentationFault: Killing PID: %d\n", OS.getCurrentPID());
+        exit();
+        return -1;
     }
 
     public boolean isStopped() {
