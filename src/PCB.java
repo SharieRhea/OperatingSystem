@@ -13,7 +13,8 @@ public class PCB {
     private final int[] fileDescriptors = new int[] {-1, -1, -1, -1, -1, -1, -1, -1, -1, -1};
     private final ArrayDeque<KernelMessage> messageQueue = new ArrayDeque<>();
 
-    private int[] pages = new int[100];
+    // This individual processes pages of memory, VIRTUAL
+    private int[] virtualMemoryPages = new int[100];
 
     public PCB(UserlandProcess up, Priority priority) {
         pid = nextPID;
@@ -21,7 +22,7 @@ public class PCB {
         nextPID++;
         userlandProcess = up;
         this.priority = priority;
-        Arrays.fill(pages, -1);
+        Arrays.fill(virtualMemoryPages, -1);
     }
 
     public void stop() {
@@ -89,7 +90,7 @@ public class PCB {
         return fileDescriptors;
     }
 
-    public int[] getPages() {
-        return pages;
+    public int[] getVirtualMemoryPages() {
+        return virtualMemoryPages;
     }
 }

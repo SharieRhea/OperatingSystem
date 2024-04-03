@@ -7,7 +7,8 @@ public class Kernel implements Device {
     private final Scheduler scheduler;
     private final Semaphore semaphore;
     private final VirtualFileSystem virtualFileSystem = new VirtualFileSystem();
-    private boolean[] freeSpace = new boolean[1000];
+    // Keep track of available space in PHYSICAL memory, true = in use
+    private boolean[] physicalMemoryPages = new boolean[1024];
 
     public Kernel() {
         scheduler = new Scheduler();
@@ -99,12 +100,13 @@ public class Kernel implements Device {
     }
 
     private void getMapping(int virtualPageNumber) {
-        int physicalPageNumber = scheduler.currentPCB.getPages()[virtualPageNumber];
-        // mapping is not valid, do NOT update TLB
+        int physicalPageNumber = scheduler.currentPCB.getVirtualMemoryPages()[virtualPageNumber];
+        // mapping is not valid (not allocated), do NOT update TLB
         if (physicalPageNumber == -1)
             return;
 
         var TLB = scheduler.currentPCB.getUserlandProcess().getTLB();
+        // randomly choose which row of the TLB to update
         Random random = new Random();
         int row = random.nextInt(2);
         TLB[row][0] = virtualPageNumber;
@@ -113,7 +115,7 @@ public class Kernel implements Device {
 
     private void allocate(int size) {
         int numPages = size / 1024;
-        var virtualPages = getScheduler().currentPCB.getPages();
+        var virtualPages = getScheduler().currentPCB.getVirtualMemoryPages();
         // find a contiguous space in virtual memory for this process
         int virtualMemoryIndex = 0;
         int contiguous = 0;
@@ -137,16 +139,26 @@ public class Kernel implements Device {
 
         // Find the first free page in physical memory
         int physicalMemoryIndex = 0;
-        while (freeSpace[physicalMemoryIndex]) {
+        while (physicalMemoryPages[physicalMemoryIndex]) {
             physicalMemoryIndex++;
+        }
+        if (physicalMemoryIndex > physicalMemoryPages.length - 1) {
+            // Not enough space in physical memory, fail
+            OS.returnValue = -1;
+            return;
         }
         for (int i = 0; i < numPages; i++) {
             // Set the virtual -> physical mapping and update in use
             virtualPages[virtualPointer + i] = physicalMemoryIndex;
-            freeSpace[physicalMemoryIndex] = true;
+            physicalMemoryPages[physicalMemoryIndex] = true;
             // Get the next free page in physical memory
-            while (physicalMemoryIndex < freeSpace.length && freeSpace[physicalMemoryIndex]) {
+            while (physicalMemoryIndex < physicalMemoryPages.length && physicalMemoryPages[physicalMemoryIndex]) {
                 physicalMemoryIndex++;
+            }
+            if (physicalMemoryIndex > physicalMemoryPages.length - 1) {
+                // Not enough space in physical memory, fail
+                OS.returnValue = -1;
+                return;
             }
         }
         // return the virtual address
@@ -155,12 +167,12 @@ public class Kernel implements Device {
 
     private void free(int pointer, int size) {
         // first, get the physical page from the virtual pointer
-        int physicalPage = getScheduler().currentPCB.getPages()[pointer];
+        int physicalPage = getScheduler().currentPCB.getVirtualMemoryPages()[pointer];
         int numPages = size / 1024;
         // Remove mappings for however many pages need to be freed
         for (int i = physicalPage; i < numPages; i++) {
-            getScheduler().currentPCB.getPages()[i] = -1;
-            freeSpace[i] = false;
+            getScheduler().currentPCB.getVirtualMemoryPages()[i] = -1;
+            physicalMemoryPages[i] = false;
         }
         OS.returnValue = true;
     }
@@ -213,8 +225,8 @@ public class Kernel implements Device {
         virtualFileSystem.seek(fds[id], to);
     }
 
-    public boolean[] getFreeSpace() {
-        return freeSpace;
+    public boolean[] getPhysicalMemoryPages() {
+        return physicalMemoryPages;
     }
 
     // Used for testing only

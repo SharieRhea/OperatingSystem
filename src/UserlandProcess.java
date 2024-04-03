@@ -42,7 +42,7 @@ public abstract class UserlandProcess implements Runnable {
             physicalPage = TLB[1][1];
             return physicalPage * 1024 + offset;
         }
-        // wasn't in the TLB, try to get the mapping
+        // wasn't in the TLB, try to get the mapping and check once more
         OS.getMapping(virtualPage);
         if (TLB[0][0] == virtualPage) {
             physicalPage = TLB[0][1];

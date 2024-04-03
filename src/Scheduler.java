@@ -67,11 +67,11 @@ public class Scheduler {
                     fileDescriptors[i] = -1;
                 }
             }
-            var virtualMemory = currentPCB.getPages();
+            var virtualMemory = currentPCB.getVirtualMemoryPages();
             for (int i = 0; i < virtualMemory.length; i++) {
                 if (virtualMemory[i] >= 0) {
                     // set the physical page to no longer be in use
-                    kernel.getFreeSpace()[virtualMemory[i]] = false;
+                    kernel.getPhysicalMemoryPages()[virtualMemory[i]] = false;
                     // clear the mapping from the virtual memory
                     virtualMemory[i] = -1;
                 }
