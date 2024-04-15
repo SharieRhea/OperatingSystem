@@ -119,4 +119,12 @@ public abstract class UserlandProcess implements Runnable {
     public int[][] getTLB() {
         return TLB;
     }
+
+    public static byte[] getMemory() {
+        return memory;
+    }
+
+    public static void setMemory(int index, byte data) {
+        memory[index] = data;
+    }
 }

@@ -11,6 +11,8 @@ public class OS {
 
         createProcess(new Idle(), Priority.BACKGROUND);
         createProcess(init, priority);
+        currentCall = CallType.CREATE_SWAPFILE;
+        switchToKernel();;
     }
 
     // Overloaded so that the default priority is interactive

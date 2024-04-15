@@ -41,7 +41,7 @@ public class UnitTestsPaging {
         OS.startup(new NecessaryFreeProcess());
         Thread.sleep(2000);
 
-        var freeSpace = OS.getKernel().getPhysicalMemoryPages();
+        var freeSpace = OS.getKernel().getFreeSpace();
         for (boolean inUse : freeSpace) {
            assertFalse(inUse);
         }

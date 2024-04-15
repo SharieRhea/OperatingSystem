@@ -61,6 +61,10 @@ public class VirtualFileSystem implements Device {
         devices[id].seek(deviceIDs[id], to);
     }
 
+    public FakeFileSystem getFileSystem() {
+        return fileSystem;
+    }
+
     // Used for testing only
     public Device[] getDevices() {
         return devices;

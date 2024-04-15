@@ -5,12 +5,13 @@ public class BasicMemoryProcess extends UserlandProcess {
 
     public void main() {
         Random random = new Random();
-        for (int iterations = 0; iterations < 5; iterations++) {try {
-            Thread.sleep(100);
-        }
-        catch (InterruptedException interruptedException) {
-            System.out.println("Thread interruption: " + interruptedException.getMessage());
-        }
+        for (int iterations = 0; iterations < 5; iterations++) {
+            try {
+                Thread.sleep(100);
+            }
+            catch (InterruptedException interruptedException) {
+                System.out.println("Thread interruption: " + interruptedException.getMessage());
+            }
             int pointer = OS.allocateMemory(2048);
             if (pointer == -1) {
                 System.out.println("Memory failed to allocate (full), exiting.");

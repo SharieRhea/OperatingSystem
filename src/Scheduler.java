@@ -67,13 +67,15 @@ public class Scheduler {
                     fileDescriptors[i] = -1;
                 }
             }
-            var virtualMemory = currentPCB.getVirtualMemoryPages();
-            for (int i = 0; i < virtualMemory.length; i++) {
-                if (virtualMemory[i] >= 0) {
+            var mappings = currentPCB.getMappings();
+            for (int i = 0; i < mappings.length; i++) {
+                if (mappings[i] != null) {
                     // set the physical page to no longer be in use
-                    kernel.getPhysicalMemoryPages()[virtualMemory[i]] = false;
+                    int physicalPageNumber = mappings[i].physicalPageNumber;
+                    if (physicalPageNumber != -1)
+                        kernel.getFreeSpace()[physicalPageNumber] = false;
                     // clear the mapping from the virtual memory
-                    virtualMemory[i] = -1;
+                    mappings[i] = null;
                 }
             }
 
@@ -162,6 +164,31 @@ public class Scheduler {
             case INTERACTIVE -> interactiveProcesses.add(pcb);
             case BACKGROUND -> backgroundProcesses.add(pcb);
         }
+    }
+
+    // Find a random victim process to steal a page from (for swapping)
+    public PCB getRandomProcess() {
+        var living = getAllLivingPCBs();
+        var waiting = getSleepingProcesses();
+        ArrayList<PCB> processes = new ArrayList<>();
+        processes.addAll(living.values());
+        processes.addAll(waiting.values());
+        Random random = new Random();
+        boolean victimFound = false;
+        PCB victim = null;
+
+        while (!victimFound) {
+            int index = random.nextInt(processes.size());
+            victim = processes.get(index);
+            var mapping = victim.getMappings();
+            int virtualPageIndex = 0;
+            while (virtualPageIndex < mapping.length && mapping[virtualPageIndex] != null && mapping[virtualPageIndex].physicalPageNumber == -1) {
+                virtualPageIndex++;
+            }
+            if (virtualPageIndex < mapping.length)
+                victimFound = true;
+        }
+        return victim;
     }
 
     // Provides a list of all PCBs for the kernel to search through by name and
