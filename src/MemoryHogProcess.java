@@ -1,3 +1,4 @@
+import java.util.Arrays;
 import java.util.Random;
 
 public class MemoryHogProcess extends UserlandProcess {
@@ -15,21 +16,21 @@ public class MemoryHogProcess extends UserlandProcess {
             if (data[0] == 0)
                 data[0] = (byte) 13;
             write(pointer + i * 1024, data[0]);
-            System.out.printf("Process %d wrote to address %d%n", pid, pointer + i * 1024);
             cooperate();
         }
+        System.out.printf("Process %d finished writing.%n", pid);
         while (true) {
+            byte[] values = new byte[20];
             for (int i = 0; i < 20; i++) {
-                byte value = read(pointer + i * 1024);
-                System.out.printf("Process %d read value %d%n", pid, value);
+                values[i] = read(pointer + i * 1024);
                 try {
                     Thread.sleep(100);
-                }
-                catch (InterruptedException interruptedException) {
+                } catch (InterruptedException interruptedException) {
                     System.out.println(interruptedException.getMessage());
                 }
-                cooperate();
             }
+            System.out.printf("Process %d read %s%n", pid, Arrays.toString(values));
+            cooperate();
         }
     }
 }
