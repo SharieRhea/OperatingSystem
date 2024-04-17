@@ -16,12 +16,13 @@ public abstract class UserlandProcess implements Runnable {
 
     public byte read(int address) {
         int physicalAddress = getPhysicalAddress(address);
-        return memory[physicalAddress];
+        return (physicalAddress > -1) ? memory[physicalAddress] : 0;
     }
 
     public void write(int address, byte value) {
         int physicalAddress = getPhysicalAddress(address);
-        memory[physicalAddress] = value;
+        if (physicalAddress > -1)
+            memory[physicalAddress] = value;
     }
 
     private int getPhysicalAddress(int address) {

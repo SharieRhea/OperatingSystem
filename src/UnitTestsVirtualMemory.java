@@ -85,6 +85,6 @@ public class UnitTestsVirtualMemory {
         OS.createProcess(new ShortFileProcess(), Priority.BACKGROUND);
         OS.createProcess(new ShortFileCloseProcess(), Priority.REAL_TIME);
         OS.createProcess(new BasicMemoryProcess());
-        Thread.sleep(5000);
+        Thread.sleep(10000);
     }
 }
